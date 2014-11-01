@@ -1,18 +1,39 @@
 	/** @jsx React.DOM */
 
 	var Post = React.createClass({
+		componentWillMount: function() {
+			this.setState(this.props.post);
+			this.setState({
+				"gif": this.props.post.previewURL,
+				"isloaded": ""
+			});
+		},
+		componentDidMount: function() {
+			var gif = new Image();
+			gif.onload = function() {
+				this.setState({
+					"gif": gif.src,
+					"isloaded": "isloaded"
+				});
+			}.bind(this);
+			gif.width = 50;
+			gif.src = this.state.gifURL;
+		},
 		render: function() {
 			return (
 				<div className="post">
 					<div className="post-main-info">
-						<div className="post-votes">{this.props.post.votes}</div>
-						<div className="post-description">{this.props.post.description}</div>
+						<div className="post-votes">{this.state.votes}</div>
+						<div className="post-description">{this.state.description}</div>
 					</div>
-					<img className="post-image pure-img" src={this.props.post.gifURL} />
+					<div className={"post-image " + this.state.isloaded}>
+						<div className="post-image-overlay"><span>...</span></div>
+						<img src={this.state.gif} />
+					</div>
 					<div className="post-secondary-info">
-						<span className="post-date">{this.props.post.date}</span>
+						<span className="post-date">{this.state.date}</span>
 						<span> by </span>
-						<span className="post-author">{this.props.post.author}</span>
+						<span className="post-author">{this.state.author}</span>
 					</div>
 				</div>
 			);
@@ -42,9 +63,15 @@
 			url: yqlurl,
 			dataType: 'json',
 			success: function(response) {
-				success(response.query.results.json.result);
+				if (response.query.results && response.query.results.json && response.query.results.json.result) {
+					success(response.query.results.json.result);
+				} else {
+					error("yql:null");
+				}
 			},
-			error: error
+			error: function(xhr, status, err) {
+				error(err.toString);
+			}
 		});
 	}
 
@@ -52,9 +79,10 @@
 		loadPosts: function(page) {
 			getPostsForPage('latest', 0, 10, 
 			function(posts) {
+				console.log(posts);
 				this.setState({posts: posts});
-			}.bind(this), function(xhr, status, error) {
-				console.error(xhr, status, err.toString());
+			}.bind(this), function(error) {
+				console.error(error);
 			}.bind(this));
 		},
 		componentDidMount: function() {
@@ -65,9 +93,7 @@
 		},
 		render: function() {
 			return (
-				<div className="life">
-					<PostsList posts={this.state.posts} />
-				</div>
+				<PostsList posts={this.state.posts} />
 			);
 		}
 	});

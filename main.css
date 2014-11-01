@@ -1,30 +1,78 @@
-.posts {
-	margin-left: auto;
-	margin-right: auto;
-	width: 600px;
+.posts
+{
+    width: 600px;
+    margin-right: auto;
+    margin-left: auto;
 }
-
 @media (max-width: 750px) {
-	.posts {
-		width: 100% !important;
-		margin-left: 0 !important;
-		margin-right: 0 !important;
-	}
-	.post-image {
-		width: 100%;
-	}
+    .posts
+    {
+        width: 100% !important;
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+    }
+    .post {
+        border-left: 0 !important;
+        border-right: 0 !important;
+    }
+    .post-image
+    {
+        width: 100%;
+    }
 }
+.post
+{
+    margin: 20px 0;
+    padding: 10px;
 
-.post {
-	border: 1px solid gray;
-	padding: 10px;
-	margin: 20px 0;
+    border: 1px solid #555;
 }
-
-.post-votes {
-	float: right;
+.post-votes
+{
+    float: right;
 }
+.post-image
+{
+    position: relative;
 
-.post-image {
-	padding: 10px 0;
+    display: inline-block;
+
+    max-width: 100%;
+    margin: 10px 0;
+}
+.post-image > img
+{
+    display: block;
+
+    width: 100%;
+    height: auto;
+}
+.post-image > .post-image-overlay
+{
+    font-size: 2em;
+    font-weight: 700;
+
+    position: absolute;
+    z-index: 100;
+
+    display: block;
+    overflow: hidden;
+
+    width: 100%;
+    height: 100%;
+
+    text-align: center;
+
+    color: #fff;
+    background: rgba(0, 0, 0, .5);
+}
+.post-image > .post-image-overlay > span {
+	position: absolute;
+	top: 50%;
+	margin-top: -.5em;
+	margin-left: -.5em;
+}
+.post-image.isloaded > .post-image-overlay
+{
+    display: none;
 }

@@ -1,18 +1,39 @@
 	/** @jsx React.DOM */
 
 	var Post = React.createClass({displayName: 'Post',
+		componentWillMount: function() {
+			this.setState(this.props.post);
+			this.setState({
+				"gif": this.props.post.previewURL,
+				"isloaded": ""
+			});
+		},
+		componentDidMount: function() {
+			var gif = new Image();
+			gif.onload = function() {
+				this.setState({
+					"gif": gif.src,
+					"isloaded": "isloaded"
+				});
+			}.bind(this);
+			gif.width = 50;
+			gif.src = this.state.gifURL;
+		},
 		render: function() {
 			return (
 				React.DOM.div({className: "post"}, 
 					React.DOM.div({className: "post-main-info"}, 
-						React.DOM.div({className: "post-votes"}, this.props.post.votes), 
-						React.DOM.div({className: "post-description"}, this.props.post.description)
+						React.DOM.div({className: "post-votes"}, this.state.votes), 
+						React.DOM.div({className: "post-description"}, this.state.description)
 					), 
-					React.DOM.img({className: "post-image pure-img", src: this.props.post.gifURL}), 
+					React.DOM.div({className: "post-image " + this.state.isloaded}, 
+						React.DOM.div({className: "post-image-overlay"}, React.DOM.span(null, "...")), 
+						React.DOM.img({src: this.state.gif})
+					), 
 					React.DOM.div({className: "post-secondary-info"}, 
-						React.DOM.span({className: "post-date"}, this.props.post.date), 
+						React.DOM.span({className: "post-date"}, this.state.date), 
 						React.DOM.span(null, " by "), 
-						React.DOM.span({className: "post-author"}, this.props.post.author)
+						React.DOM.span({className: "post-author"}, this.state.author)
 					)
 				)
 			);
@@ -42,9 +63,15 @@
 			url: yqlurl,
 			dataType: 'json',
 			success: function(response) {
-				success(response.query.results.json.result);
+				if (response.query.results && response.query.results.json && response.query.results.json.result) {
+					success(response.query.results.json.result);
+				} else {
+					error("yql:null");
+				}
 			},
-			error: error
+			error: function(xhr, status, err) {
+				error(err.toString);
+			}
 		});
 	}
 
@@ -52,9 +79,10 @@
 		loadPosts: function(page) {
 			getPostsForPage('latest', 0, 10, 
 			function(posts) {
+				console.log(posts);
 				this.setState({posts: posts});
-			}.bind(this), function(xhr, status, error) {
-				console.error(xhr, status, err.toString());
+			}.bind(this), function(error) {
+				console.error(error);
 			}.bind(this));
 		},
 		componentDidMount: function() {
@@ -65,9 +93,7 @@
 		},
 		render: function() {
 			return (
-				React.DOM.div({className: "life"}, 
-					PostsList({posts: this.state.posts})
-				)
+				PostsList({posts: this.state.posts})
 			);
 		}
 	});
