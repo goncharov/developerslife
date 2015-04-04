@@ -4,29 +4,33 @@
 		componentWillMount: function() {
 			this.setState(this.props.post);
 			this.setState({
-				"gif": this.props.post.previewURL,
-				"isloaded": ""
+				'gif': this.props.post.previewURL,
+				'isloaded': false
 			});
 		},
 		componentDidMount: function() {
 			var gif = new Image();
 			gif.onload = function() {
 				this.setState({
-					"gif": gif.src,
-					"isloaded": "isloaded"
+					'gif': gif.src,
+					'isloaded': true
 				});
 			}.bind(this);
 			gif.width = 50;
 			gif.src = this.state.gifURL;
 		},
 		render: function() {
+			var imgClasses = classNames({
+				'post-image': true,
+				'isloaded': this.state.isloaded
+			});
 			return (
 				<div className="post">
 					<div className="post-main-info">
 						<div className="post-votes">{this.state.votes}</div>
 						<div className="post-description">{this.state.description}</div>
 					</div>
-					<div className={"post-image " + this.state.isloaded}>
+					<div className={imgClasses}>
 						<div className="post-image-overlay"><span>...</span></div>
 						<img src={this.state.gif} />
 					</div>
@@ -57,39 +61,47 @@
 
 	var getPostsForPage = function(type, page, size, success, error) {
 		var api = 'http://developerslife.ru/' + type + '/' + page + '?json=true&types=gif&pageSize=' + size;
-		var yql = "select * from json where url='" + encodeURIComponent(api) + "'";
-		var yqlurl = 'https://query.yahooapis.com/v1/public/yql?q=' + yql + '&format=json';
-		$.ajax({
-			url: yqlurl,
-			dataType: 'json',
-			success: function(response) {
-				if (response.query.results && response.query.results.json && response.query.results.json.result) {
-					success(response.query.results.json.result);
+		var proxyUrl = 'http://warm-plateau-6357.herokuapp.com/' + api;
+
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', proxyUrl, true);
+		xhr.onload = function() {
+			if (this.status >= 200 && this.status < 400) {
+			var apiResults = JSON.parse(this.response);
+				if (apiResults.result && apiResults.result) {
+					success(apiResults.result);
 				} else {
-					error("yql:null");
+					error('yql:null');
 				}
-			},
-			error: function(xhr, status, err) {
-				error(err.toString);
+			} else {
+					error(this.status);
 			}
-		});
+		};
+		xhr.onerror = function() {
+			error('onerror');
+		};
+		xhr.send();
 	}
 
 	var Life = React.createClass({
+		getInitialState: function() {
+			return {
+				posts: [],
+				page: 0
+			};
+		},
 		loadPosts: function(page) {
 			getPostsForPage('latest', 0, 10, 
-			function(posts) {
-				console.log(posts);
-				this.setState({posts: posts});
-			}.bind(this), function(error) {
-				console.error(error);
-			}.bind(this));
+				function(posts) {
+					console.log(posts);
+					this.setState({posts: posts});
+				}.bind(this), function(error) {
+					console.error(error);
+				}.bind(this)
+			);
 		},
 		componentDidMount: function() {
 			this.loadPosts(0);
-		},
-		getInitialState: function() {
-			return {posts: []};
 		},
 		render: function() {
 			return (
@@ -98,4 +110,4 @@
 		}
 	});
 
-	React.renderComponent(<Life />, document.getElementById('content'));
+	React.render(<Life />, document.body);
